@@ -2,12 +2,16 @@ package common
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"time"
 
 	"github.com/astaxie/beego/validation"
 	"github.com/google/uuid"
+	"github.com/sendgrid/rest"
+
 )
 
 type Time struct {
@@ -78,4 +82,30 @@ func CheckRequireValid(ob interface{}) error {
 		return fmt.Errorf(err)
 	}
 	return nil
+}
+
+func SendRestAPI(url string, method rest.Method, header map[string]string, queryParam map[string]string, bodyInput interface{}) (body string, headers map[string][]string, err error) {
+	request := rest.Request{
+		Method:      method,
+		BaseURL:     url,
+		Headers:     header,
+		QueryParams: queryParam,
+	}
+	if bodyInput != nil {
+		bodyData, err := json.Marshal(bodyInput)
+		if err != nil {
+			return body, headers, err
+		}
+		request.Body = bodyData
+	}
+	response, err := rest.Send(request)
+	if err != nil {
+		return body, headers, err
+	} else {
+		if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated && response.StatusCode != http.StatusNoContent {
+			return "", nil, fmt.Errorf("failed to call api: %v", err)
+		} else {
+			return response.Body, response.Headers, nil
+		}
+	}
 }
