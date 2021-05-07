@@ -60,7 +60,7 @@ if err := common.CheckRequireValid(req); err != nil {
 ```
 # Map struct
 Map value in map[string]string to struct
-```code
+```golang
 
 type variable struct {
     ID  string
