@@ -109,3 +109,22 @@ func SendRestAPI(url string, method rest.Method, header map[string]string, query
 		}
 	}
 }
+
+func MapStruct(in map[string]string, out interface{}) error {
+	data, err := json.Marshal(in)
+	if err != nil {
+		return err
+	}
+	tmp := map[string]interface{}{}
+	if err := json.Unmarshal(data, &tmp); err != nil {
+		return err
+	}
+	tmp2, err := json.Marshal(tmp)
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(tmp2, out); err != nil {
+		return err
+	}
+	return nil
+}
