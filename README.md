@@ -1,3 +1,3 @@
 :collision: Falling from starts
-# Common Function for golang coder
+# Common functions for golang coder
 - Leave a Star if you were here!
