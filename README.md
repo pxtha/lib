@@ -16,7 +16,7 @@ go get github.com/praslar/lib@latest
 ```
 
 # Sync 
-Sync add new value to object and keep old value. Usually use when updating fields of record.
+Sync add only changed values to object. Usually use when updating fields of record.
 ```golang
 
 type UpdateUserRequest struct {
