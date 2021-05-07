@@ -42,3 +42,17 @@ func UpdateUser(req UpdateUserRequest, id string) (res User) {
 }
 
 ```
+# Validation
+Valid struct and return error if there is any.
+```golang
+req := struct {
+    Name string `valid:"Required"`
+    Age  int     `valid:"Required"`
+}{"Praslar"}
+
+if err := common.CheckRequireValid(req); err != nil {
+		return nil, err
+}
+
+// this will return error that required Age value in req object
+```
