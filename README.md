@@ -58,7 +58,7 @@ if err := common.CheckRequireValid(req); err != nil {
 
 // this will return error that required Age and Name value in req object
 ```
-# Map struct
+# Map to struct
 Map value in map[string]string to struct
 ```golang
 
