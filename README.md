@@ -58,3 +58,16 @@ if err := common.CheckRequireValid(req); err != nil {
 
 // this will return error that required Age and Name value in req object
 ```
+# Map struct
+Map value in map[string]string to struct
+```code
+
+type variable struct {
+    ID  string
+}
+
+vars := mux.Vars(r)
+if err := common.MapStruct(vars, variable); err != nil {
+	return err
+}
+```
