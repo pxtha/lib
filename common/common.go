@@ -110,6 +110,7 @@ func SendRestAPI(url string, method rest.Method, header map[string]string, query
 	}
 }
 
+// map map[string]string to struct (ex: map mux.Vars to some struct)
 func MapStruct(in map[string]string, out interface{}) error {
 	data, err := json.Marshal(in)
 	if err != nil {
