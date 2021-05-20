@@ -128,3 +128,4 @@ func MapStruct(in map[string]string, out interface{}) error {
 	}
 	return nil
 }
+
