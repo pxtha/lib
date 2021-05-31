@@ -2,6 +2,7 @@ package response
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -36,6 +37,10 @@ func JSON(w http.ResponseWriter, status int, data interface{}) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	if status == 0 {
+		http.Error(w, fmt.Errorf("Utils.Gen ERROR! Make sure you have the tag yaml for GenStatus struct: e.x:` BadRequest   Status `yaml:\"bad_request\"` `").Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	w.Write(b)
@@ -52,3 +57,18 @@ func Error(w http.ResponseWriter, err error, status int) {
 		"message": err.Error(),
 	})
 }
+
+// MarshalJSON implement encoding/json.Marshaler interface.
+// It will automatically set AppError to Success if AppError is nil
+func (rs BaseResponse) MarshalJSON() ([]byte, error) {
+	var v = baseResponse(rs)
+	if v.Status() == 0 {
+		v.ResponseStatus = ResponseStatus{
+			XCode:    1001,
+			XStatus:  200,
+			XMessage: "Success",
+		}
+	}
+	return json.Marshal(v)
+}
+
