@@ -1,4 +1,4 @@
-package common
+package query
 
 import (
 	"database/sql/driver"
@@ -131,7 +131,7 @@ func PaginationQuery(c *http.Request) (int, int) {
 //=========================================================================
 type chain struct {
 	req           *http.Request
-	resPagination Pagination
+	ResPagination Pagination
 	q             *gorm.DB
 	err           error
 	checkOn       string
@@ -234,9 +234,9 @@ func (c *chain) Order(name string) *chain {
 	return c
 }
 
-func (c *chain) Pagination(model interface{}) *chain {
+func (c *chain) Pagination(model interface{}) *Pagination {
 	if c.err != nil {
-		return c
+		return nil
 	}
 	currentPage, perPage := PaginationQuery(c.req)
 
@@ -258,12 +258,13 @@ func (c *chain) Pagination(model interface{}) *chain {
 	// add to query
 	c.q = c.q.Limit(limit).Offset((page - 1) * limit)
 	// set header
-	c.resPagination.Size = currentPage
-	c.resPagination.Page = perPage
-	c.resPagination.NextPage = nextPage
-	c.resPagination.LastPage = lastPage
-	c.resPagination.Total = totalRecords
-	return c
+	return &Pagination{
+		Page:    currentPage,
+		Size:    perPage,
+		NextPage:nextPage,
+		LastPage:lastPage,
+		Total:   totalRecords,
+	}
 }
 
 //---------------------------------------------------------------
