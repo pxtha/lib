@@ -19,7 +19,7 @@ type (
 	BaseResponse struct {
 		ResponseStatus
 		Data interface{} `json:"data"`
-		Meta *string     `json:"meta,omitempty"`
+		Meta interface{}     `json:"meta,omitempty"`
 	}
 
 	baseResponse BaseResponse
