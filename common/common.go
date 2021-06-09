@@ -4,9 +4,14 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/logs"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 	"net/http"
 	"reflect"
+	"strings"
 	"time"
+	"unicode"
 
 	"github.com/astaxie/beego/validation"
 	"github.com/google/uuid"
@@ -128,4 +133,48 @@ func MapStruct(in map[string]string, out interface{}) error {
 		return err
 	}
 	return nil
+}
+
+func isMn(r rune) bool {
+	return unicode.Is(unicode.Mn, r) // Mn: nonspacing marks
+}
+
+func TransformString(in string, uppercase bool) string {
+	t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
+	result, _, err := transform.String(t, in)
+	if err != nil {
+		logs.Error("Failed to transform %s ", in)
+		return ""
+	}
+
+	// trim space
+	result = strings.ReplaceAll(result, " ", "")
+	if uppercase {
+		return strings.ToUpper(result)
+	}
+	return strings.ToLower(result)
+}
+
+func TimeNow() *time.Time {
+	t := time.Now()
+	return &t
+}
+
+func TimePointer(in time.Time) *time.Time {
+	return &in
+}
+
+func StringPointer(in string) *string {
+	return &in
+}
+
+func IntPointer(in int) *int {
+	return &in
+}
+
+func FloatPointer(in float64) *float64 {
+	return &in
+}
+func UUIDPointer(in uuid.UUID) *uuid.UUID {
+	return &in
 }
