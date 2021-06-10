@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/validation"
+	"github.com/google/uuid"
+	"github.com/sendgrid/rest"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 	"net/http"
@@ -12,11 +15,6 @@ import (
 	"strings"
 	"time"
 	"unicode"
-
-	"github.com/astaxie/beego/validation"
-	"github.com/google/uuid"
-	"github.com/sendgrid/rest"
-
 )
 
 type Time struct {
@@ -149,6 +147,8 @@ func TransformString(in string, uppercase bool) string {
 
 	// trim space
 	result = strings.ReplaceAll(result, " ", "")
+	result = strings.ReplaceAll(result, "Đ", "D")
+	result = strings.ReplaceAll(result, "đ", "d")
 	if uppercase {
 		return strings.ToUpper(result)
 	}
