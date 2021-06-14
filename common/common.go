@@ -106,7 +106,10 @@ func SendRestAPI(url string, method rest.Method, header map[string]string, query
 		return body, headers, err
 	} else {
 		if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated && response.StatusCode != http.StatusNoContent {
-			return "", nil, fmt.Errorf("failed to call api: %v", err)
+			// parsing error
+			r := map[string]interface{}{}
+			_ = json.Unmarshal([]byte(response.Body),&r)
+			return "", nil, fmt.Errorf("%v", r)
 		} else {
 			return response.Body, response.Headers, nil
 		}
