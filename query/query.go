@@ -101,6 +101,13 @@ func CurrentUser(c *http.Request) (uuid.UUID, error) {
 	if strings.Contains(userIdStr, "|") {
 		userIdStr = strings.Split(userIdStr, "|")[0]
 	}
+	_, err :=  uuid.Parse(userIdStr)
+	if err != nil {
+		userIdStr = c.Header.Get("x-user-extra")
+		if strings.Contains(userIdStr, "|") {
+			userIdStr = strings.Split(userIdStr, "|")[0]
+		}
+	}
 	return uuid.Parse(userIdStr)
 }
 
