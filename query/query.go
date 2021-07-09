@@ -501,3 +501,27 @@ func (c *chain) UpdateJsonB(name string) *chain {
 	}
 	return c
 }
+
+type TimeFromTo struct {
+	TimeFrom time.Time `json:"time_from"`
+	TimeTo   time.Time `json:"time_to"`
+}
+
+func SlideTime(tFrom time.Time, tTo time.Time, period time.Duration) (res []TimeFromTo) {
+	for {
+		if tFrom.Add(period).Before(tTo) {
+			res = append(res, TimeFromTo{
+				TimeFrom: tFrom,
+				TimeTo:   tFrom.Add(period),
+			})
+			tFrom = tFrom.Add(period)
+		} else {
+			res = append(res, TimeFromTo{
+				TimeFrom: tFrom,
+				TimeTo:   tTo,
+			})
+			break
+		}
+	}
+	return
+}
