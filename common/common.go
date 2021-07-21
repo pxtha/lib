@@ -8,7 +8,6 @@ import (
 	"github.com/astaxie/beego/validation"
 	"github.com/google/uuid"
 	"github.com/sendgrid/rest"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/text/transform"
 	"golang.org/x/text/unicode/norm"
 	"net/http"
@@ -197,86 +196,4 @@ type ConsumersKongA struct {
 	Id uuid.UUID `json:"id"`
 	Group string `json:"group"`
 	Tags string  `json:"tags"`
-}
-
-func CheckUpdateAnotherUsersData(urlKongGateway string,urlUserHasBusiness string,userIdStr string,creatorId uuid.UUID ,userId uuid.UUID ,businessID uuid.UUID,isCreate bool)error{
-
-	msgError := "Can't update another user's data"
-
-	checkUserRole,err := CheckUserRole(urlKongGateway,userIdStr,"admin")
-	if err != nil {
-		return err
-	}
-
-	if checkUserRole {
-		return nil
-	}
-
-	if isCreate {
-		userHasBusiness,err := GetUserHasBusiness(urlUserHasBusiness,userId.String() ,businessID.String())
-		if err != nil {
-			return err
-		}
-
-		if len(userHasBusiness) == 0{
-			logrus.Errorf("Fail to get user has business due to %v", err)
-			return fmt.Errorf(msgError)
-		}
-
-	}else {
-		if creatorId != userId {
-			return fmt.Errorf(msgError)
-		}
-	}
-
-	return nil
-}
-
-func GetUserHasBusiness(url string,userId string ,businessID string) (res []UserHasBusiness, err error) {
-
-	param := map[string]string{}
-	param["user_id"] = userId
-	param["business_id"] = businessID
-	body, _, err := SendRestAPI(url,rest.Get, nil, param, nil)
-	if err != nil {
-		return res, err
-	}
-	tmp := new(struct{
-		Data []UserHasBusiness `json:"data"`
-	})
-	if err = json.Unmarshal([]byte(body), &tmp); err != nil {
-		return res, err
-	}
-	return tmp.Data, nil
-}
-
-func GetRoleUser(url string,userIdStr string) (res []ConsumersKongA, err error) {
-	header := make(map[string]string)
-	header["x-user-id"] = userIdStr
-	body, _, err := SendRestAPI(url, rest.Get, header, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	tmp := new(struct{
-		Data []ConsumersKongA `json:"data"`
-	})
-	if err = json.Unmarshal([]byte(body), &tmp); err != nil {
-		return res, err
-	}
-	return tmp.Data, nil
-}
-
-func CheckUserRole(url string,userIdStr string,role string)(bool,error){
-	lstConsumer,err := GetRoleUser(url,userIdStr)
-	if err != nil {
-		return false,err
-	}
-
-	for _,consumer := range lstConsumer {
-		if strings.Contains(consumer.Group,role) {
-			return true,nil
-		}
-	}
-
-	return false,nil
 }
