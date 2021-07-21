@@ -96,7 +96,7 @@ func MustBeInt(v string) int {
 	return res
 }
 
-func CurrentUser(c *http.Request) (uuid.UUID, error) {
+func CurrentUser(c *http.Request) (string,uuid.UUID, error) {
 	userIdStr := c.Header.Get("x-user-id")
 	if strings.Contains(userIdStr, "|") {
 		userIdStr = strings.Split(userIdStr, "|")[0]
@@ -108,9 +108,12 @@ func CurrentUser(c *http.Request) (uuid.UUID, error) {
 			userIdStr = strings.Split(userIdStr, "|")[0]
 		}
 	} else {
-		return res, nil
+		return userIdStr,res, nil
 	}
-	return uuid.Parse(userIdStr)
+
+	userUuid,err := uuid.Parse(userIdStr)
+
+	return userIdStr,userUuid,err
 }
 
 func PaginationQuery(c *http.Request) (int, int) {
