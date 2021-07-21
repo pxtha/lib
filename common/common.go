@@ -250,7 +250,7 @@ func GetUserHasBusiness(url string,userId string ,businessID string) (res []User
 	return tmp.Data, nil
 }
 
-func GetRoleUser(userIdStr string,url string) (res []ConsumersKongA, err error) {
+func GetRoleUser(url string,userIdStr string) (res []ConsumersKongA, err error) {
 	header := make(map[string]string)
 	header["x-user-id"] = userIdStr
 	body, _, err := SendRestAPI(url, rest.Get, header, nil, nil)
