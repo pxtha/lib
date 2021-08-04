@@ -4,7 +4,6 @@ import (
 	"crypto/ecdsa"
 	"crypto/tls"
 	"github.com/sirupsen/logrus"
-	"lib/utils"
 	"log"
 	Sync "sync"
 
@@ -15,6 +14,13 @@ import (
 	"github.com/sideshow/apns2/payload"
 	"github.com/sideshow/apns2/token"
 )
+
+const (
+	PLATFORM_APNs = 1
+	PLATFORM_FCM  = 2
+)
+
+
 
 type AppNotification struct {
 	// list of client
@@ -55,7 +61,7 @@ func NewNotificationHelper(config Config) *AppNotification {
 		androidClient := FCMInitFromConfig(config.AndroidConfig)
 		if androidClient != nil {
 			android = &Client{
-				Platform:      utils.PLATFORM_FCM,
+				Platform:      PLATFORM_FCM,
 				Mutex:         &Sync.Mutex{},
 				androidClient: androidClient,
 				SenderID:      config.AndroidConfig.ClientID,
@@ -66,7 +72,7 @@ func NewNotificationHelper(config Config) *AppNotification {
 		iOSClient := APNsInitFromConfig(config.IOSConfig)
 		if iOSClient != nil {
 			iOS = &Client{
-				Platform:    utils.PLATFORM_APNs,
+				Platform:    PLATFORM_APNs,
 				Mutex:       &Sync.Mutex{},
 				iOSClient:   iOSClient,
 				AppBundleID: config.IOSConfig.AppBundleID,
@@ -90,7 +96,7 @@ func (a *AppNotification) SendMessageForAll(msg *Message) {
 
 func (a *AppNotification) SendMessageForAndroid(msg *Message) {
 	for key, client := range a.clients {
-		if client.Platform == utils.PLATFORM_FCM {
+		if client.Platform == PLATFORM_FCM {
 			go a.SendMessage(client.Platform, key, msg)
 		}
 	}
@@ -98,7 +104,7 @@ func (a *AppNotification) SendMessageForAndroid(msg *Message) {
 
 func (a *AppNotification) SendMessageForIOS(msg *Message) {
 	for key, client := range a.clients {
-		if client.Platform == utils.PLATFORM_APNs {
+		if client.Platform == PLATFORM_APNs {
 			go a.SendMessage(client.Platform, key, msg)
 		}
 	}
@@ -109,10 +115,10 @@ func (a *AppNotification) SendMessage(platform int, clientID string, msg *Messag
 		logrus.Infof("SendMessage client.Platform ", client.Platform)
 		logrus.Infof("SendMessage token ", msg.Tokens)
 		switch client.Platform {
-		case utils.PLATFORM_FCM:
+		case PLATFORM_FCM:
 			a._sendFCM(client, msg)
 			break
-		case utils.PLATFORM_APNs:
+		case PLATFORM_APNs:
 			a._sendAPNs(client, msg)
 			break
 		default:
