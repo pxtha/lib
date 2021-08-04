@@ -16,7 +16,6 @@ import (
 	"github.com/sideshow/apns2/token"
 )
 
-
 type AppNotification struct {
 	// list of client
 	clients map[string]*Client
@@ -50,20 +49,41 @@ type Message struct {
 	Topic       string
 }
 
-
-func NewNotificationHelper(androidID string, IOSID string,  androidClient, IOSClient *Client) *AppNotification {
+func NewNotificationHelper(config Config) *AppNotification {
+	android, iOS := &Client{}, &Client{}
+	if config.AndroidConfig != nil {
+		androidClient := FCMInitFromConfig(config.AndroidConfig)
+		if androidClient != nil {
+			android = &Client{
+				Platform:      utils.PLATFORM_FCM,
+				Mutex:         &Sync.Mutex{},
+				androidClient: androidClient,
+				SenderID:      config.AndroidConfig.ClientID,
+			}
+		}
+	}
+	if config.IOSConfig != nil {
+		iOSClient := APNsInitFromConfig(config.IOSConfig)
+		if iOSClient != nil {
+			iOS = &Client{
+				Platform:    utils.PLATFORM_APNs,
+				Mutex:       &Sync.Mutex{},
+				iOSClient:   iOSClient,
+				AppBundleID: config.IOSConfig.AppBundleID,
+			}
+		}
+	}
 	return &AppNotification{
 		clients: map[string]*Client{
-			"FCM_"+androidID: androidClient,
-			"APNs_"+IOSID: IOSClient,
+			"FCM_" + config.AndroidConfig.ID: android,
+			"APNs_" + config.IOSConfig.ID:    iOS,
 		},
 	}
 }
 
-
 func (a *AppNotification) SendMessageForAll(msg *Message) {
 	for key, client := range a.clients {
-		log.Printf("SendMessageForAll key ",key)
+		log.Printf("SendMessageForAll key ", key)
 		go a.SendMessage(client.Platform, key, msg)
 	}
 }
@@ -86,8 +106,8 @@ func (a *AppNotification) SendMessageForIOS(msg *Message) {
 
 func (a *AppNotification) SendMessage(platform int, clientID string, msg *Message) {
 	if client, found := a.clients[clientID]; found {
-		logrus.Infof("SendMessage client.Platform ",client.Platform)
-		logrus.Infof("SendMessage token ",msg.Tokens)
+		logrus.Infof("SendMessage client.Platform ", client.Platform)
+		logrus.Infof("SendMessage token ", msg.Tokens)
 		switch client.Platform {
 		case utils.PLATFORM_FCM:
 			a._sendFCM(client, msg)
@@ -96,11 +116,11 @@ func (a *AppNotification) SendMessage(platform int, clientID string, msg *Messag
 			a._sendAPNs(client, msg)
 			break
 		default:
-			log.Println("Unsupported platform ID platform ",platform )
+			log.Println("Unsupported platform ID platform ", platform)
 			break
 		}
 	} else {
-		log.Println("Unsupported platform ID client ","Client not found" )
+		log.Println("Unsupported platform ID client ", "Client not found")
 	}
 }
 
@@ -128,12 +148,12 @@ func (a *AppNotification) _sendAPNs(client *Client, msg *Message) {
 		notification.DeviceToken = deviceToken
 		status, err := client.iOSClient.Push(notification)
 		if err != nil {
-			logrus.Infof("send APNs error ",err.Error())
+			logrus.Infof("send APNs error ", err.Error())
 		} else {
 			if status.Sent() {
-				logrus.Infof("send APNs error ","Sent successfully")
+				logrus.Infof("send APNs error ", "Sent successfully")
 			} else {
-				logrus.Errorf("send APNs error ","Sent failed")
+				logrus.Errorf("send APNs error ", "Sent failed")
 			}
 		}
 	}
@@ -152,12 +172,12 @@ func (a *AppNotification) _sendFCM(client *Client, msg *Message) {
 	})
 	status, err := client.androidClient.Send()
 	if err == nil {
-		logrus.Infof("send FCM ","Sent successfully")
-		logrus.Infof("Status Code",status.StatusCode)
-		logrus.Infof("Success",status.Success)
+		logrus.Infof("send FCM ", "Sent successfully")
+		logrus.Infof("Status Code", status.StatusCode)
+		logrus.Infof("Success", status.Success)
 
 	} else {
-		logrus.Errorf("send FCM error",err.Error())
+		logrus.Errorf("send FCM error", err.Error())
 	}
 	client.Mutex.Unlock()
 }
@@ -172,9 +192,9 @@ type FCMConfig struct {
 	ClientID  string `json:"client_id"`
 }
 
-func (a *AppNotification) FCMInitFromConfig(config *FCMConfig) *fcm.FcmClient {
+func FCMInitFromConfig(config *FCMConfig) *fcm.FcmClient {
 	if config.ServerKey == "" {
-		log.Println("send FCMInitFromConfig error","Error when init FCM client from config! Server key was empty please check again.")
+		log.Println("send FCMInitFromConfig error", "Error when init FCM client from config! Server key was empty please check again.")
 		return nil
 	}
 	client := fcm.NewFcmClient(config.ServerKey)
@@ -204,22 +224,22 @@ type APNsConfig struct {
 	AppBundleID  string `json:"app_bundle_id"`
 }
 
-func (a *AppNotification) APNsInitFromConfig(config *APNsConfig) *apns2.Client {
+func APNsInitFromConfig(config *APNsConfig) *apns2.Client {
 	switch config.KeyType {
 	case "p12":
 		certificateKey, err := certificate.FromP12File(config.KeyFilePath, config.Password)
 		if err != nil {
-			log.Println("platform APNs:Error when create certificate, Please check key file is correct or not ",err.Error())
+			log.Println("platform APNs:Error when create certificate, Please check key file is correct or not ", err.Error())
 			return nil
 		}
-		return a.apns_NewClient_P12_Pem(certificateKey, config)
+		return apns_NewClient_P12_Pem(certificateKey, config)
 	case "pem":
 		certificateKey, err := certificate.FromPemFile(config.KeyFilePath, config.Password)
 		if err != nil {
-			log.Println("platform APNs:Error when create certificate, Please check key file is correct or not ",err.Error())
+			log.Println("platform APNs:Error when create certificate, Please check key file is correct or not ", err.Error())
 			return nil
 		}
-		return a.apns_NewClient_P12_Pem(certificateKey, config)
+		return apns_NewClient_P12_Pem(certificateKey, config)
 	case "p8":
 		var err error
 		var authKey *ecdsa.PrivateKey
@@ -229,10 +249,10 @@ func (a *AppNotification) APNsInitFromConfig(config *APNsConfig) *apns2.Client {
 			authKey, err = token.AuthKeyFromBytes([]byte(config.KeyData))
 		}
 		if err != nil {
-			log.Println("platform APNs:Error when create authentication key, Please check key file is correct or not",err.Error())
+			log.Println("platform APNs:Error when create authentication key, Please check key file is correct or not", err.Error())
 			return nil
 		}
-		return a.apns_NewClient_P8(authKey, config)
+		return apns_NewClient_P8(authKey, config)
 	default:
 		log.Println("platform APNs:Init APNs failed. Key was invalid. APNs only support for .p12, .pem, .p8")
 		break
@@ -240,7 +260,7 @@ func (a *AppNotification) APNsInitFromConfig(config *APNsConfig) *apns2.Client {
 	return nil
 }
 
-func (a *AppNotification) apns_NewClient_P12_Pem(cer tls.Certificate, config *APNsConfig) *apns2.Client {
+func apns_NewClient_P12_Pem(cer tls.Certificate, config *APNsConfig) *apns2.Client {
 	if config.IsProduction {
 		return apns2.NewClient(cer).Production()
 	} else {
@@ -248,7 +268,7 @@ func (a *AppNotification) apns_NewClient_P12_Pem(cer tls.Certificate, config *AP
 	}
 }
 
-func (a *AppNotification) apns_NewClient_P8(authKey *ecdsa.PrivateKey, config *APNsConfig) *apns2.Client {
+func apns_NewClient_P8(authKey *ecdsa.PrivateKey, config *APNsConfig) *apns2.Client {
 	// init token
 	token := &token.Token{
 		AuthKey: authKey,
@@ -264,4 +284,3 @@ func (a *AppNotification) apns_NewClient_P8(authKey *ecdsa.PrivateKey, config *A
 		return apns2.NewTokenClient(token).Development()
 	}
 }
-
