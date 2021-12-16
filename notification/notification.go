@@ -20,8 +20,6 @@ const (
 	PLATFORM_FCM  = 2
 )
 
-
-
 type AppNotification struct {
 	// list of client
 	clients map[string]*Client
@@ -84,6 +82,29 @@ func NewNotificationHelper(config Config) *AppNotification {
 			"FCM_" + config.AndroidConfig.ID: android,
 			"APNs_" + config.IOSConfig.ID:    iOS,
 		},
+	}
+}
+
+func NewNotificationHelperFCM(config Config) *AppNotification {
+	android := &Client{}
+	if config.AndroidConfig != nil {
+		androidClient := FCMInitFromConfig(config.AndroidConfig)
+		if androidClient != nil {
+			android = &Client{
+				Platform:      PLATFORM_FCM,
+				Mutex:         &Sync.Mutex{},
+				androidClient: androidClient,
+				SenderID:      config.AndroidConfig.ClientID,
+			}
+		}
+		return &AppNotification{
+			clients: map[string]*Client{
+				"FCM_" + config.AndroidConfig.ID: android,
+			},
+		}
+	}
+	return &AppNotification{
+		clients: map[string]*Client{},
 	}
 }
 
