@@ -193,6 +193,7 @@ func (a *AppNotification) _sendAPNs(client *Client, msg *Message) {
 func (a *AppNotification) _sendFCM(client *Client, msg *Message) {
 	client.Mutex.Lock()
 	// prepare and send message
+	client.androidClient.SetPriority("high")
 	client.androidClient.NewFcmRegIdsMsg(msg.Tokens, msg.PayloadData)
 	client.androidClient.SetNotificationPayload(&fcm.NotificationPayload{
 		Title: msg.Title,
