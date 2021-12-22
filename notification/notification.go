@@ -51,6 +51,8 @@ type Message struct {
 	PayloadData interface{}
 	Tokens      []string
 	Topic       string
+	Sound       string
+	Badge       string
 }
 
 func NewNotificationHelper(config Config) *AppNotification {
@@ -109,6 +111,7 @@ func NewNotificationHelperFCM(config Config) *AppNotification {
 }
 
 func (a *AppNotification) SendMessageForAll(msg *Message) {
+	msg.Sound = "default"
 	for key, client := range a.clients {
 		log.Printf("SendMessageForAll key ", key)
 		go a.SendMessage(client.Platform, key, msg)
@@ -194,7 +197,8 @@ func (a *AppNotification) _sendFCM(client *Client, msg *Message) {
 	client.androidClient.SetNotificationPayload(&fcm.NotificationPayload{
 		Title: msg.Title,
 		Body:  msg.Body,
-
+		Sound: msg.Sound,
+		Badge: msg.Badge,
 		//TODO: if support for fcm APNs then need set other field here
 	})
 	status, err := client.androidClient.Send()

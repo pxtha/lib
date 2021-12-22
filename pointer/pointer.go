@@ -29,3 +29,7 @@ func UUID(in uuid.UUID) *uuid.UUID {
 func Time(in time.Time) *time.Time {
 	return &in
 }
+
+func BoolPointer(in bool) *bool {
+	return &in
+}
