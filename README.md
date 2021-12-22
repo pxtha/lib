@@ -8,13 +8,24 @@
  - [Validation](#Validation)
  - [Send Rest API to other serives](#send-rest-api)
  - [Map to struct](#map-to-struct)
+ - [Notification with firebase](#notification)
 
 # Usage
-
 ```bash
 go get github.com/praslar/lib@latest
 ```
+# Notification
+```golang
+notiConfig := NotificationClient.Config{}
+	rawData, err := ioutil.ReadFile("./conf/notification.conf")
+	err = json.Unmarshal(rawData, &notiConfig)
+	if err != nil {
+		log.Println("Error when read notification config >>> remove file")
+		return nil
+	}
 
+	notiClient := NotificationClient.NewNotificationHelperFCM(notiConfig)
+```
 # Sync 
 Sync add only changed values to object. Usually use when updating fields of record.
 ```golang
